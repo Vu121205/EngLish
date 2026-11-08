@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VocabMaster - Hệ Thống Học & Quản Lý Từ Vựng Tiếng Anh Chuyên Nghiệp</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-extrabold text-xl shadow-md shadow-indigo-100">
+          V
+        </div>
+        <div>
+          <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-700 to-violet-600 bg-clip-text text-transparent flex items-center gap-2">
+            VocabMaster <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 uppercase tracking-wider">Pro</span>
+          </h1>
+          <p class="text-xs text-slate-500">Kho từ vựng: <span id="header-total-count" class="font-bold text-slate-700">21</span> từ | Ngữ âm & Nghĩa</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2.5">
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100" id="header-study-progress">
+          Đã xem: 0 / 21
+        </span>
+        <button id="btn-add-word-modal" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs transition">
+          <span>+</span> Thêm từ mới
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="max-w-5xl mx-auto px-4 mt-4 w-full">
+    <nav class="flex space-x-1 rounded-xl bg-slate-200/80 p-1 shadow-inner text-sm font-medium overflow-x-auto">
+      <button data-tab="flashcard" class="nav-tab-btn flex-1 min-w-[100px] py-2 rounded-lg text-center font-semibold transition-all shadow-xs bg-white text-indigo-600">
+        🃏 Flashcards
+      </button>
+      <button data-tab="quiz" class="nav-tab-btn flex-1 min-w-[100px] py-2 rounded-lg text-center font-semibold transition-all text-slate-600 hover:text-slate-900">
+        🎯 Trắc Nghiệm
+      </button>
+      <button data-tab="spelling" class="nav-tab-btn flex-1 min-w-[100px] py-2 rounded-lg text-center font-semibold transition-all text-slate-600 hover:text-slate-900">
+        ✍️ Luyện Gõ
+      </button>
+      <button data-tab="list" class="nav-tab-btn flex-1 min-w-[100px] py-2 rounded-lg text-center font-semibold transition-all text-slate-600 hover:text-slate-900">
+        📖 Danh Sách (<span id="list-count-badge">21</span>)
+      </button>
+      <button data-tab="manage" class="nav-tab-btn flex-1 min-w-[100px] py-2 rounded-lg text-center font-semibold transition-all text-slate-600 hover:text-slate-900">
+        ⚙️ Quản Lý Kho Từ
+      </button>
+    </nav>
+  </div>
+
+  <!-- Main Content -->
+  <main class="max-w-5xl mx-auto px-4 py-6 flex-1 w-full">
+
+    <!-- ================= 1. FLASHCARD SECTION ================= -->
+    <section id="section-flashcard" class="tab-section max-w-xl mx-auto">
+      <div class="flex items-center justify-between text-xs text-slate-500 mb-2.5 px-1">
+        <div class="flex items-center gap-2">
+          <span id="fc-counter" class="font-bold text-slate-700">Thẻ 1 / 21</span>
+          <select id="fc-group-filter" class="text-xs bg-white border border-slate-200 rounded-md px-2 py-1 text-slate-700 outline-none focus:border-indigo-500">
+            <option value="all">Tất cả nhóm</option>
+          </select>
+        </div>
+        <span class="hidden sm:inline text-slate-400">Phím tắt: Space (lật), ← → (chuyển)</span>
+      </div>
+
+      <!-- Flashcard 3D Card -->
+      <div id="flashcard-container" class="perspective-1000 w-full h-80 sm:h-96 cursor-pointer select-none">
+        <div id="flashcard-inner" class="relative w-full h-full card-transition transform-style-preserve-3d shadow-xl rounded-2xl">
+          
+          <!-- Front Face -->
+          <div class="absolute inset-0 backface-hidden bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 flex flex-col justify-between items-center text-center">
+            <div class="w-full flex justify-between items-center">
+              <span id="fc-group-front" class="text-xs px-2.5 py-1 rounded-full bg-slate-100 font-mono text-slate-600 border border-slate-200 font-medium">Nhóm âm: /ɪə/</span>
+              <button id="fc-btn-audio" class="w-10 h-10 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center transition shadow-xs" title="Nghe phát âm">
+                🔊
+              </button>
+            </div>
+            <div>
+              <h2 id="fc-word" class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-2"></h2>
+              <p id="fc-ipa" class="text-lg font-mono text-indigo-600 font-semibold"></p>
+              <span id="fc-pos" class="inline-block mt-1 text-xs italic text-slate-400 font-mono"></span>
+            </div>
+            <div class="text-xs text-slate-400 flex items-center gap-1.5">
+              <span>↻ Chạm vào thẻ để lật xem nghĩa tiếng Việt & ví dụ</span>
+            </div>
+          </div>
+
+          <!-- Back Face -->
+          <div class="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl p-6 sm:p-8 flex flex-col justify-between text-left">
+            <div class="flex justify-between items-center">
+              <span id="fc-word-back" class="font-extrabold text-lg text-indigo-300"></span>
+              <span id="fc-ipa-back" class="font-mono text-xs text-slate-300"></span>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-indigo-300 mb-1">Nghĩa tiếng Việt:</p>
+              <h3 id="fc-meaning" class="text-xl sm:text-2xl font-bold text-white mb-4 leading-snug"></h3>
+              
+              <div class="bg-white/10 rounded-xl p-3.5 border border-white/10">
+                <p class="text-xs font-semibold text-indigo-200 mb-1">Câu ví dụ:</p>
+                <p id="fc-example" class="text-sm italic text-slate-100"></p>
+                <p id="fc-example-vi" class="text-xs text-slate-300 mt-1 font-medium"></p>
+              </div>
+            </div>
+            <div class="text-xs text-slate-400 text-center">
+              Chạm để quay lại mặt trước
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex items-center justify-center gap-3 sm:gap-4 mt-6">
+        <button id="fc-btn-prev" class="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 font-semibold text-sm transition flex items-center gap-1.5 shadow-xs">
+          ← Trước
+        </button>
+        <button id="fc-btn-shuffle" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition" title="Xáo trộn ngẫu nhiên">
+          🔀 Xáo trộn
+        </button>
+        <button id="fc-btn-next" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition flex items-center gap-1.5 shadow-md shadow-indigo-200">
+          Sau →
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= 2. QUIZ SECTION ================= -->
+    <section id="section-quiz" class="tab-section max-w-xl mx-auto hidden">
+      <div id="quiz-card-box" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-lg">
+        <!-- Quiz Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+          <div class="text-xs font-semibold text-slate-500">
+            Câu <span id="quiz-index" class="text-indigo-600 font-bold">1</span> / <span id="quiz-total">10</span>
+          </div>
+          <div class="flex items-center gap-3 text-sm">
+            <span class="text-amber-600 font-bold">🔥 Chuỗi: <span id="quiz-streak">0</span></span>
+            <span class="text-emerald-600 font-bold">Điểm: <span id="quiz-score">0</span></span>
+          </div>
+        </div>
+
+        <!-- Question -->
+        <div class="text-center py-3">
+          <p class="text-xs text-slate-400 font-semibold mb-1 uppercase tracking-wider">Chọn nghĩa đúng của từ:</p>
+          <div class="flex items-center justify-center gap-2 mb-1">
+            <h3 id="quiz-question" class="text-3xl font-extrabold text-slate-900 tracking-tight"></h3>
+            <button id="quiz-btn-audio" class="text-indigo-600 hover:text-indigo-800 p-1.5 rounded-full text-xl hover:bg-indigo-50 transition" title="Nghe phát âm">🔊</button>
+          </div>
+          <p id="quiz-ipa" class="font-mono text-sm text-indigo-600 mb-4 font-semibold"></p>
+        </div>
+
+        <!-- Options Container -->
+        <div id="quiz-options" class="grid grid-cols-1 gap-2.5 mt-2">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Feedback & Next Button -->
+        <div id="quiz-feedback" class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between hidden">
+          <div id="quiz-feedback-text" class="text-sm font-semibold"></div>
+          <button id="quiz-btn-next" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition shadow-sm">
+            Câu tiếp →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3. SPELLING SECTION ================= -->
+    <section id="section-spelling" class="tab-section max-w-xl mx-auto hidden">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-lg text-center">
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-100 inline-block mb-3">
+          Nghe & Gõ chính tả
+        </span>
+        
+        <div class="my-4">
+          <button id="spell-btn-audio" class="w-16 h-16 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-2xl mx-auto flex items-center justify-center shadow-lg shadow-indigo-200 transition hover:scale-105 active:scale-95">
+            🔊
+          </button>
+          <p class="text-xs text-slate-400 mt-2">Bấm loa để nghe phát âm từ vựng</p>
+        </div>
+
+        <div class="my-4">
+          <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Gợi ý nghĩa tiếng Việt:</p>
+          <p id="spell-meaning" class="text-xl font-bold text-slate-800 mt-1"></p>
+          <p id="spell-ipa" class="font-mono text-xs text-slate-400 mt-1"></p>
+        </div>
+
+        <!-- Input Box -->
+        <form id="spell-form" class="mt-6">
+          <input type="text" id="spell-input" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Gõ từ tiếng Anh vào đây..." class="w-full text-center text-xl font-semibold tracking-wide py-3 px-4 rounded-xl border-2 border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 outline-none transition">
+          
+          <div id="spell-result" class="mt-3 text-sm font-semibold h-6"></div>
+
+          <div class="flex items-center justify-center gap-2.5 mt-5">
+            <button type="button" id="spell-btn-hint" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+              💡 Gợi ý chữ cái
+            </button>
+            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-indigo-100 transition">
+              Kiểm tra
+            </button>
+            <button type="button" id="spell-btn-skip" class="px-3.5 py-2 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+              Bỏ qua →
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================= 4. LIST SECTION ================= -->
+    <section id="section-list" class="tab-section hidden">
+      <!-- Search & Filters Bar -->
+      <div class="flex flex-col sm:flex-row gap-3 items-center justify-between mb-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div class="relative w-full sm:w-80">
+          <span class="absolute inset-y-0 left-3 flex items-center text-slate-400">🔍</span>
+          <input type="text" id="search-input" placeholder="Tìm theo từ, nghĩa, phát âm..." class="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-slate-200 focus:outline-indigo-600">
+        </div>
+        <div id="filter-categories-container" class="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+          <!-- Dynamic category pills -->
+        </div>
+      </div>
+
+      <!-- Word Cards Grid -->
+      <div id="word-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ================= 5. VOCABULARY MANAGER SECTION ================= -->
+    <section id="section-manage" class="tab-section hidden max-w-4xl mx-auto">
+      <div class="mb-6">
+        <h2 class="text-xl font-extrabold text-slate-900">Trung Tâm Quản Lý Kho Từ Vựng</h2>
+        <p class="text-xs text-slate-500 mt-1">Tùy biến kho từ theo nhu cầu học tập của bạn: thêm từ mới, nhập/xuất dữ liệu, thêm hàng loạt và sao lưu.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <!-- Card: Thêm từ đơn -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:border-indigo-300 transition flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold mb-3">
+              ➕
+            </div>
+            <h3 class="font-bold text-slate-800 text-base">Thêm Từ Vựng Mới</h3>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Nhập đầy đủ từ tiếng Anh, phiên âm IPA, nhóm âm, nghĩa tiếng Việt và câu ví dụ.</p>
+          </div>
+          <button onclick="document.getElementById('btn-add-word-modal').click()" class="mt-4 w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition">
+            Mở biểu mẫu thêm từ
+          </button>
+        </div>
+
+        <!-- Card: Thêm hàng loạt (Batch) -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:border-violet-300 transition flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-xl font-bold mb-3">
+              📋
+            </div>
+            <h3 class="font-bold text-slate-800 text-base">Thêm Nhanh Hàng Loạt</h3>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Dán danh sách nhiều từ cùng lúc theo định dạng đơn giản (Từ | Nghĩa) hoặc đầy đủ.</p>
+          </div>
+          <button id="btn-open-batch-modal" class="mt-4 w-full py-2 px-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-semibold transition">
+            Dán danh sách văn bản
+          </button>
+        </div>
+
+        <!-- Card: Sao lưu & Phục hồi -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:border-emerald-300 transition flex flex-col justify-between">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold mb-3">
+              💾
+            </div>
+            <h3 class="font-bold text-slate-800 text-base">Sao Lưu & Nhập File</h3>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">Xuất toàn bộ kho từ ra file JSON hoặc nhập file sao lưu từ máy tính dễ dàng.</p>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button id="btn-export-json" class="flex-1 py-2 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition">
+              Xuất JSON
+            </button>
+            <button id="btn-trigger-import" class="flex-1 py-2 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+              Nhập JSON
+            </button>
+            <input type="file" id="file-import-json" accept=".json" class="hidden">
+          </div>
+        </div>
+      </div>
+
+      <!-- Tùy chọn nâng cao & Đặt lại -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h4 class="font-bold text-sm text-slate-800">Khôi phục 21 từ vựng gốc ban đầu</h4>
+          <p class="text-xs text-slate-500 mt-0.5">Đặt lại toàn bộ kho từ về danh sách 21 từ vựng ngữ âm chuẩn được biên soạn sẵn.</p>
+        </div>
+        <button id="btn-reset-default" class="px-4 py-2 border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold rounded-xl transition whitespace-nowrap">
+          ⚠️ Khôi phục dữ liệu gốc
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MODAL: THÊM / SỬA TỪ VỰNG ================= -->
+  <div id="word-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 animate-fade-in max-h-[90vh] flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <h3 id="modal-title" class="font-bold text-slate-800 text-base">Thêm Từ Vựng Mới</h3>
+        <button id="modal-btn-close" class="text-slate-400 hover:text-slate-700 text-lg p-1">✕</button>
+      </div>
+
+      <form id="word-form" class="p-6 space-y-3.5 overflow-y-auto flex-1">
+        <!-- Word & IPA -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Từ tiếng Anh <span class="text-rose-500">*</span></label>
+            <div class="relative">
+              <input type="text" id="form-word" required placeholder="Ví dụ: Resilience" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none">
+              <button type="button" id="form-btn-test-audio" class="absolute right-2 top-2 text-indigo-600 hover:text-indigo-800 text-sm" title="Nghe thử">🔊</button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Phiên âm IPA</label>
+            <input type="text" id="form-ipa" placeholder="Ví dụ: /rɪˈzɪl.jəns/" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none font-mono">
+          </div>
+        </div>
+
+        <!-- POS & Group -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Từ loại (POS)</label>
+            <input type="text" id="form-pos" placeholder="n, v, adj, adv..." class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Nhóm ngữ âm / Chủ đề</label>
+            <input type="text" id="form-group" placeholder="Ví dụ: /ɪə/, IELTS, Giao tiếp..." class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none">
+          </div>
+        </div>
+
+        <!-- Meaning -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nghĩa tiếng Việt <span class="text-rose-500">*</span></label>
+          <textarea id="form-meaning" required rows="2" placeholder="Ví dụ: Khả năng phục hồi, kiên cường vượt qua khó khăn" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none"></textarea>
+        </div>
+
+        <!-- Example EN -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Câu ví dụ tiếng Anh</label>
+          <input type="text" id="form-example" placeholder="Ví dụ: She showed great resilience in the face of adversity." class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none">
+        </div>
+
+        <!-- Example VI -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Dịch nghĩa câu ví dụ</label>
+          <input type="text" id="form-example-vi" placeholder="Ví dụ: Cô ấy đã thể hiện sự kiên cường to lớn trước nghịch cảnh." class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none">
+        </div>
+
+        <!-- Footer Buttons -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" id="modal-btn-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">
+            Hủy
+          </button>
+          <button type="submit" class="px-5 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition">
+            Lưu Từ Vựng
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: THÊM NHANH HÀNG LOẠT ================= -->
+  <div id="batch-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200 animate-fade-in max-h-[90vh] flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">Thêm Nhanh Hàng Loạt Từ Vựng</h3>
+          <p class="text-xs text-slate-500">Dán danh sách từ theo mỗi dòng một từ</p>
+        </div>
+        <button id="batch-btn-close" class="text-slate-400 hover:text-slate-700 text-lg p-1">✕</button>
+      </div>
+
+      <div class="p-6 overflow-y-auto flex-1 space-y-3">
+        <div class="text-xs bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-indigo-900 space-y-1">
+          <p class="font-bold">Hỗ trợ các định dạng mỗi dòng:</p>
+          <p class="font-mono text-[11px] text-indigo-700">• Cách 1 (Đầy đủ): <span class="text-slate-800">Từ | IPA | TừLoại | Nhóm | Nghĩa | VíDụ | DịchVíDụ</span></p>
+          <p class="font-mono text-[11px] text-indigo-700">• Cách 2 (Nhanh): <span class="text-slate-800">Từ | Nghĩa tiếng Việt</span></p>
+          <p class="font-mono text-[11px] text-indigo-700">• Cách 3 (Dấu gạch hoặc hai chấm): <span class="text-slate-800">Từ - Nghĩa</span> hoặc <span class="text-slate-800">Từ : Nghĩa</span></p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nhóm mặc định cho các từ này:</label>
+          <input type="text" id="batch-default-group" value="Tự thêm" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:border-indigo-600 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nội dung danh sách từ:</label>
+          <textarea id="batch-textarea" rows="8" placeholder="Resilience | /rɪˈzɪl.jəns/ | n | IELTS | Sự kiên cường | Stay resilient. | Hãy kiên cường.
+Persist | Kiên trì, bền bỉ
+Ambition : Tham vọng, hoài bão" class="w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-lg focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none"></textarea>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="document.getElementById('batch-btn-close').click()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">
+            Hủy
+          </button>
+          <button type="button" id="batch-btn-submit" class="px-5 py-2 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white rounded-lg shadow-sm transition">
+            Nhập Danh Sách
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Scripts: Loaded in OOP Dependency Order -->
+  <script src="js/data/defaultVocab.js"></script>
+  <script src="js/models/Word.js"></script>
+  <script src="js/services/AudioService.js"></script>
+  <script src="js/services/StorageService.js"></script>
+  <script src="js/components/FlashcardComponent.js"></script>
+  <script src="js/components/QuizComponent.js"></script>
+  <script src="js/components/SpellingComponent.js"></script>
+  <script src="js/components/WordListComponent.js"></script>
+  <script src="js/components/WordManagerComponent.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
